@@ -1,0 +1,151 @@
+<html ng-app="quizzicle" lang='en'>
+<head>
+	<title>Jason Quizzicle</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+	<script src="angular.min.js"></script>
+	<script src="checklist-model.min.js"></script>
+	<script src="data.js"></script>
+	<script src="app.js"></script>
+	<style type='text/css'>
+body{
+	background:#cbebff;
+}
+#screen{
+	width:800px;
+	margin:auto auto;
+	background:#fff;
+	-webkit-box-shadow: inset 0px 0px 105px 0px rgba(199,199,199,0.53);
+	-moz-box-shadow: inset 0px 0px 105px 0px rgba(199,199,199,0.53);
+	box-shadow: inset 0px 0px 105px 0px rgba(199,199,199,0.53);
+	padding:20px;
+	position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+	height:500px;
+	border-radius:20px;
+}
+#content{
+	overflow-y:auto;
+	height:100%;
+}
+#predetermined-list{
+	text-align:center;
+}
+#predetermined-list button{
+	margin:5px 0 0 0;
+}
+.multiple{
+	display:block;
+}
+
+	</style>
+</script>
+</head>
+<body ng-controller="quizController">
+
+
+
+	<script type='text/ng-template' id='begin.html'>
+		<h1>Welcome</h1>
+		<p>This quiz is designed to assess your observational skills around the school. There are <strong>{{TotalQuestions}}</strong> questions in total.</p>
+		<p>You can take as long or as little to answer each question. Questions are not timed and your answers won't be submitted externally.</p>
+		<p>
+			<button class='btn btn-success' ng-click="beginQuestionaire()">Click to begin</button>
+		</p>
+	</script>
+
+
+
+	<script type='text/ng-template' id="questions.html">
+		<div>
+			<strong>Question {{question.number}} of {{TotalQuestions}}</strong>
+			<div class="progress">
+				<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{question.number}}" aria-valuemin="0" aria-valuemax="{{TotalQuestions}}" style="width:{{completion}}%">{{completion}}%</div>
+			</div>
+			<h1>Q <small>{{question.question}}</small></h1>
+			<form role='form'>
+				<!-- Question layout depends on the type of question
+					e.g. predetermined choice or custom input
+				-->
+				<div class='form-group' ng-switch on="question.format">
+					<div ng-switch-when="text">
+						<input type='text' class='form-control' ng-model="formData.currentAnswer" />
+						<br />
+						<button class='btn btn-primary btn-block' ng-click="answer()" ng-disabled="formData.currentAnswer == ''">Next question</button>
+					</div>
+
+					<div ng-switch-when="predetermined">
+						<div id="predetermined-list">
+							<div ng-repeat="choice in question.choices">
+								<button class='btn btn-primary' ng-click="answer($index)">{{choice}}</button>
+							</div>
+						</div>
+					</div>
+
+					<div ng-switch-when="multiple">
+						<label ng-repeat="choice in question.choices" class='multiple'>
+							<input type='checkbox' checklist-model="formData.answers" checklist-value="choice" /> {{choice}}
+						</label>
+						<button class='btn btn-primary btn-block' ng-click="answer()" ng-disabled="formData.answers.length == 0">Next question</button>
+					</div>
+				</div>
+				<div class="alert alert-danger" ng-if="error == true">Invalid answer!</div>
+			</form>
+		</div>
+	</script>
+
+
+
+	<script type='text/ng-template' id="answersheet.html">
+		<h1>Results</h1>
+		<p>You answered <span class="bg-success">{{correct}}</span> correct out of {{TotalQuestions}}.</p>
+		<table class='table'>
+			<tbody>
+				<th>&nbsp;</th>
+				<th>#</th>
+				<th>Question</th>
+				<th>Answer</th>
+				<th>You put...</th>
+				<tr ng-repeat="item in config.questionBank" ng-class="{'success': item.isCorrect == true, 'danger': item.isCorrect == false }">
+					<td>
+						<span class="glyphicon glyphicon-ok" ng-if="item.isCorrect == true"></span>	
+						<span class="glyphicon glyphicon-remove" ng-if="item.isCorrect == false"></span>
+					</td>
+					<td>{{item.number}}</td>
+					<td>{{item.question}}</td>
+					<!-- multiple has to be displayed differently -->
+					<td>
+						<ul ng-if="item.format == 'multiple'">
+							<li ng-repeat="answer in item.answers">{{answer}}</li>
+						</ul>
+						<span ng-if="item.format != 'multiple'">{{item.answer}}</span>
+					</td>
+
+					<td>
+						<ul ng-if="item.format == 'multiple'">
+							<li ng-repeat="answer in item.theirAnswer">{{answer}}</li>
+						</ul>
+						<span ng-if="item.format != 'multiple'">{{item.theirAnswer}}</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</script>
+
+
+
+	<!-- Content area -->
+	<div id="screen">
+		<noscript>You need Javascript enabled to use this app.</noscript>
+		<div id='content' ng-switch on="stage">
+			<div ng-switch-when="1"><ng-include src="'begin.html'"></ng-include></div>
+			<div ng-switch-when="2"><ng-include src="'questions.html'"></ng-include></div>
+			<div ng-switch-when="3"><ng-include src="'answersheet.html'"></ng-include></div>
+		</div>
+	</div>
+</body>
+</html>
